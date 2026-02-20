@@ -1,6 +1,6 @@
-from .chat_model import ChatModel
+from .base_model import BaseModel
 
 
 __all__ = [
-    "ChatModel"
+    "BaseModel"
 ]
