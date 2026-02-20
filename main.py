@@ -1,21 +1,22 @@
 import asyncio
 from os import getenv
 from dotenv import load_dotenv
-from src.models import ChatModel
+from src.models import BaseModel
 
 
 load_dotenv()
 
+model = BaseModel(
+    id="deepseek-chat",
+    api_key=getenv("DEEPSEEK_API_KEY"),
+    base_url=getenv("DEEPSEEK_BASE_URL"),
+    extra_body={
+        "thinking": {
+            "type": "disabled"
+        },
+    },
+    stream=True
+)
 
-async def main():
-    model = ChatModel(
-        model="glm-4.7-flash",
-        api_key=getenv("GLM_API_KEY"),
-        base_url=getenv("GLM_BASE_URL"),
-    )
-    async for chunk in model.dialog([{"role": "user", "content": "使用python完成一个快速排序算法"}]):
-        print(chunk, end="")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+resp = model.run([{"role": "user", "content": "你是谁？"}])
+print(resp)
