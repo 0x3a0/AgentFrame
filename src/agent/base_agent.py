@@ -10,32 +10,21 @@ class BaseAgent:
         self,
         *,
         model: BaseModel,
-        tools: Optional[list[Callable]] = None
+        system_prompt: Optional[str] = None,
+        tool: Optional[list[Callable]] = None
     ):
         # 模型实例
         self.model = model
 
+        # 系统提示
+        if system_prompt:
+            model.system_prompt = system_prompt
+            self.system_prompt = system_prompt
+        else:
+            self.system_prompt = model.system_prompt
+
         # 工具
-        if tools:
-            self.tools = self._registry_tool(tools)
-
-
-    def _registry_tool(self, tools: list[Callable]):
-        """ 注册工具实例 """
-        tool_descriptions = []
-        for tool in tools:
-            tool_descriptions.append(loads({
-                "type": "function",
-                "name": tool.__name__,
-                "description": tool.__doc__.strip(),
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        
-                    }
-                }
-            }))
-        print(tool_descriptions)
+        self.tools = tools
 
     def run(self):
         pass
