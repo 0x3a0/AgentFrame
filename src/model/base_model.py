@@ -13,10 +13,7 @@ class BaseModel:
         base_url: str,
         system_prompt: Optional[str] = None,
         temperature: float = 0.8,
-        thinking: bool = False,
-        stream: bool = False,
         extra_body: Optional[dict[str, Any]] = None,
-        show_messages: bool = False
     ):
         # 客户端参数
         self.id = id
@@ -30,8 +27,6 @@ class BaseModel:
         
         # 对话参数
         self.temperature = temperature
-        self.thinking = thinking
-        self.stream = stream
         if extra_body is None:
             extra_body = {
                 "thinking": {
@@ -40,12 +35,8 @@ class BaseModel:
             }
         self.extra_body = extra_body
 
-        # 是否打印对话记录。当为 True 时，用户和模型的每一次对话都会打印到控制台当中
-        self.show_messages = show_messages
-
         # 客户端实例
         self.client: Optional[OpenAI] = None
-
         # 初始化客户端实例
         self._init_client()
 
@@ -76,18 +67,14 @@ class BaseModel:
             model=self.id,
             messages=messages,
             tools=tools,
-            stream=self.stream,
             temperature=self.temperature,
             extra_body=self.extra_body
         )
-        
-        if self.stream:
-            yield from resp
-        else:
-            return resp
-
-    def show_message(self):
-        pass
+        return resp
+    
+    def _merge_system_prompt_to_messages(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """ 合并系统提示词和对话消息 """
+        return [{"role": "system", "content": self.system_prompt}] + messages
 
     def invoke(
         self,
@@ -105,33 +92,10 @@ class BaseModel:
         Return:
             
         """
-        if self.show_messages:
-            for char in messages[-1]["role"] + ": " + messages[-1]["content"]:
-                print(char, end="", flush=True)
-            
-            print("\n")
-
-        if self.stream:
-            message = ""
-
-            if self.show_messages:
-                for char in "assistant: ":
-                    print(char, end="", flush=True)
-
-            for chunk in self._chat_completions(messages, tools=tools):
-                chunk_content = chunk.choices[0].delta.content
-                message += chunk_content
-
-                if self.show_messages:
-                    print(chunk_content, end="", flush=True)
-                
-            print("\n")
-
-        else:
-            resp = self._chat_completions(messages, tools=tools)
-            print(resp)
+        messages = self._merge_system_prompt_to_messages(messages)
+        resp = self._chat_completions(messages, tools=tools)
+        return resp
 
     def get_client(self) -> Optional[OpenAI]:
         """ 返回一个OpenAI客户端实例 """
-        if self.client:
-            return self.client
+        return self.client
