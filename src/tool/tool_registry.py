@@ -1,7 +1,6 @@
-from copy import deepcopy
-from typing import Type, Callable
-
-from pydantic import BaseModel
+import inspect
+from inspect import Parameter
+from typing import Callable, Optional
 
 
 class ToolRegistry:
@@ -10,40 +9,53 @@ class ToolRegistry:
     用于注册和管理工具实例
     该类提供了一个 register 装饰器方法，用于注册工具实例
     """
-    def __init__(self):
-        self.tools: dict[str, dict] = {}
+    def __init__(self) -> None:
+        self.tools: list[Optional[dict[str, dict]]] = []
+        self.tool_funcs: Optional[dict[str, Callable]] = {}
 
-    def register(self, description: str, *, Model: Type[BaseModel]):
+    def _parse_arg_property(self, arg: Parameter) -> str:
+        """ 解析参数类型 """
+        arg_annotation = arg.annotation
+
+        if arg_annotation is str:
+            return {"type": "string"}
+
+    def register(self, description: str) -> Callable:
         """ 
         注册 tool 的装饰器方法
-        根据传入的参数模型生成符合 OpenAI 函数调用格式的 tool model
+        生成符合模型调用格式的 Function Tool
+        
         :param description: 工具函数的描述
-        :param Model: 工具函数的参数模型
         """
         def wrapper(func):
-            model_json_schema = Model.model_json_schema()
-            # print(model_json_schema)
-            args = model_json_schema["properties"].keys()
-            for arg in args:
-                self.tools[func.__name__] = {
-                    "func": func,
-                    "type": "function",
-                    "function": {
-                        "name": func.__name__,
-                        "description": description,
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                str(arg): {
-                                    "type": model_json_schema["properties"][arg]["type"],
-                                    "description": model_json_schema["properties"][arg]["description"]
-                                }
-                            },
-                            "required": model_json_schema["required"]
-                        }
+            sig = inspect.signature(func)
+
+            parameters = {
+                "type": "function",
+                "function": {
+                    "name": func.__name__,
+                    "description": description or func.__doc__,
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
                     }
                 }
-                
+            }
+
+            # 提取参数信息
+            for arg in sig.parameters.values():
+                if arg.annotation is Parameter.empty:
+                    raise TypeError(f"参数 '{arg.name}' 在工具函数 '{func.__name__}' 中缺少类型注解")
+
+                arg_property = self._parse_arg_property(arg)
+                parameters["function"]["parameters"]["properties"][arg.name] = arg_property
+                parameters["function"]["parameters"]["required"].append(arg.name)
+                # print(parameters)
+
+            self.tools.append(parameters)
+            self.tool_funcs[func.__name__] = func
+
             return func
 
         return wrapper
@@ -51,12 +63,7 @@ class ToolRegistry:
     def get_registered_tools(self):
         """ 获取已注册的工具列表 """
         return self.tools
-    
-    def get_model_callable_tools(self):
-        """ 获取模型可调用的工具列表 """
-        tools = []
-        for tool in deepcopy(self.tools).values():
-            del tool['func']
-            tools.append(tool)
-        
-        return tools
+
+    def get_registered_tool_funcs(self):
+        """ 获取已注册的工具函数列表 """
+        return self.tool_funcs
