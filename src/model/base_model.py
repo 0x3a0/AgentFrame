@@ -37,6 +37,7 @@ class BaseModel:
 
         # 客户端实例
         self.client: Optional[OpenAI] = None
+        
         # 初始化客户端实例
         self._init_client()
 
@@ -71,10 +72,6 @@ class BaseModel:
             extra_body=self.extra_body
         )
         return resp
-    
-    def _merge_system_prompt_to_messages(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """ 合并系统提示词和对话消息 """
-        return [{"role": "system", "content": self.system_prompt}] + messages
 
     def invoke(
         self,
@@ -90,9 +87,8 @@ class BaseModel:
             tools (Optional[list]): 工具列表, 默认 None.
 
         Return:
-            
         """
-        messages = self._merge_system_prompt_to_messages(messages)
+        messages = [{"role": "system", "content": self.system_prompt}] + messages
         resp = self._chat_completions(messages, tools=tools)
         return resp
 
