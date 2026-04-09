@@ -44,11 +44,12 @@ class BaseAgent:
 
         # agent loop
         while True:
-            resp = self.model.invoke(self.short_term_memory.get_all_messages(), tools=tools)
+            resp = self.model.invoke(messages=self.short_term_memory.get_all_messages(), tools=tools)
 
             # 当不是 tool_calls 时，退出 agent loop
             if resp.choices[0].finish_reason != "tool_calls":
                 llm_message_content = resp.choices[0].message.content
+
                 self.short_term_memory.add({"role": "assistant", "content": llm_message_content})
                 self.printer.print_message(llm_message_content, title="assistant")
 
