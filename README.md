@@ -2,9 +2,9 @@
 
 ## 待办事项
 
-- [ ] 修改tool加载方式
+- [x] 修改tool加载方式 - 手动传入更准确的 tool schema
 - [x] 将 llm client 从 model 中分离
-- [ ] 添加流式输出功能
+- [x] API响应默认流式处理
 - [ ] TodoWrite - 将任务拆解为多个子任务按步骤执行
 - [ ] Memory System
     - [ ] Short Term Memory
