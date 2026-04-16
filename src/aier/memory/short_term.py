@@ -14,6 +14,6 @@ class ShortTermMemory:
         
         self.messages.append(message)
 
-    def get_all_messages(self) -> list[Optional[dict[str, str]]]:
+    def all_messages(self) -> list[Optional[dict[str, str]]]:
         """ 获取所有短期记忆 """
         return self.messages

@@ -1,6 +1,6 @@
 import inspect
 from inspect import Parameter
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 
 
 class ToolRegistry:
@@ -24,40 +24,35 @@ class ToolRegistry:
         if arg_annotation is str:
             return {"type": "string"}
 
-    def register(self, description: str) -> Callable:
+    def register(self, *, description: str, parameters: dict[str, Any]) -> Callable:
         """ 
         注册 tool 的装饰器方法
         生成符合模型调用格式的 Function Tool
         
         :param description: 工具函数的描述
+        :param parameters: 工具函数的参数描述
+        例如: {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "description": "需要查询的城市名称"
+                }
+            },
+            "required": ["city"]
+        }
         """
         def wrapper(func):
-            sig = inspect.signature(func)
-
-            parameters = {
+            tool_schema = {
                 "type": "function",
                 "function": {
                     "name": func.__name__,
                     "description": description,
-                    "parameters": {
-                        "type": "object",
-                        "properties": {},
-                        "required": []
-                    }
+                    "parameters": parameters
                 }
             }
 
-            # 提取参数信息
-            for arg in sig.parameters.values():
-                if arg.annotation is Parameter.empty:
-                    raise TypeError(f"参数 '{arg.name}' 在工具函数 '{func.__name__}' 中缺少类型注解")
-
-                arg_property = self._parse_arg_property(arg)
-                parameters["function"]["parameters"]["properties"][arg.name] = arg_property
-                parameters["function"]["parameters"]["required"].append(arg.name)
-                # print(parameters)
-
-            self.tools.append(parameters)
+            self.tools.append(tool_schema)
             self.tool_funcs[func.__name__] = func
 
             return func

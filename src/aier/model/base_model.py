@@ -8,16 +8,7 @@ class BaseModel(ABC):
     """ BaseModel """
 
     @abstractmethod
-    async def invoke(self,
-        *,
-        messages: list[dict[str, str]],
-        tools: Optional[list[dict[str, dict]]] = None,
-    ):
-        """ 调用模型 """
-        pass
-
-    @abstractmethod
-    async def stream_invoke(self,
+    def stream_invoke(self,
         *,
         messages: list[dict[str, str]],
         tools: Optional[list[dict[str, dict]]] = None,
