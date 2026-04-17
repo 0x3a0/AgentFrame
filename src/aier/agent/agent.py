@@ -1,13 +1,14 @@
 from json import loads
-from typing import Optional, Callable, Any
+from typing import Optional, Any
 
 from aier.model import BaseModel
+from aier.agent import BaseAgent
 from aier.tool import ToolRegistry
 from aier.memory import ShortTermMemory
 from aier.utils import Printer
 
 
-class Agent:
+class Agent(BaseAgent):
     """ Agent """
     def __init__(
         self,
@@ -30,7 +31,7 @@ class Agent:
 
         self.printer = Printer()
 
-    def _execute_tool_call(self, tool_call_buffer: dict) -> Any:
+    def _execute_tool(self, tool_call_buffer: dict) -> Any:
         """ 执行工具调用 """
         tool_funcs = self.tools.get_registered_tool_funcs()
         
