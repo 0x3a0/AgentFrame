@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 class BaseAgent(ABC):
     @abstractmethod
-    def _execute_tool_call(self, tool_call_buffer: dict[str, str]) -> str:
+    def _execute_tool(self, tool_call_buffer: dict[str, str]) -> str:
         """ 执行工具调用 """
         pass
     
