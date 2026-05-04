@@ -1,8 +1,4 @@
-from .base_model import OpenAI, BaseModel
-from .openai_chat_model import OpenAIChatModel
+from openai import OpenAI
+from .chat_model import ChatModel
 
-__all__ = [
-    "OpenAI",
-    "BaseModel",
-    "OpenAIChatModel"
-]
+__all__ = ["OpenAI", "ChatModel"]
